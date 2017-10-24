@@ -5,7 +5,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-public class JobMaster {
+public class JobMaster
+{
 
     private final static Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
@@ -14,7 +15,7 @@ public class JobMaster {
 
     //Credentials for the database
     static final String USERNAME = "root";
-    static final String PASS = "Kumar**25";
+    static final String PASS = "root@123";
 
     //Contains Service type and associated technician count
     HashMap<String, Integer> serviceType = new HashMap<String, Integer>();
@@ -22,7 +23,7 @@ public class JobMaster {
     //Contains Customer Service job and its associated type
     HashMap<String, String> serviceJob = new HashMap<String, String>();
 
-    //Contains Techinian id with associated service type skills
+    //Contains Technician id with associated service type skills
     HashMap<String, ArrayList<String>> technicianCompetency = new HashMap<String, ArrayList<String>>();
 
     //Sorted Service jobs based on complexity
@@ -30,6 +31,9 @@ public class JobMaster {
 
     //Sorted technician id based on lowest competency first
     LinkedHashMap<String, ArrayList<String>> sortedTechCompetency = new LinkedHashMap<>();
+
+    // Team formation w.r.t techid and jobid
+    LinkedHashMap<String, String> teamMatrix = new LinkedHashMap<>();
 
     public static void main(String[] args){
         JobMaster jobMaster = new JobMaster();
@@ -51,6 +55,10 @@ public class JobMaster {
         jobMaster.sortTechCompetency();
         jobMaster.sortedTechCompetency.forEach((techid, servtypelist) ->
                 System.out.println(techid + " " + servtypelist.toString()));
+
+        //calling algorithm1
+        jobMaster.algorithm1();
+        jobMaster.teamMatrix.forEach((techid, jobid)-> System.out.println(techid + " " + jobid ));
     }
 
     //Get service type and associated number of technician from database
@@ -152,6 +160,45 @@ public class JobMaster {
         technicianCompetency.forEach((techid, complist) -> tempMap.put(techid, complist.size()));
         Map<String, Integer> sortedMap = SortMapUtility.sortByValueAsc(tempMap);
         sortedMap.forEach((techid, comp) -> sortedTechCompetency.put(techid, technicianCompetency.get(techid)));
+    }
+
+    private void algorithm1(){
+        //TODO: include exceptions
+        List<String> assignedTechList = new ArrayList<String>();
+        Boolean team = false;
+        Boolean assignedSingle= false;
+        for(String jobid: sortedServiceJob.keySet()){
+            String servtype = sortedServiceJob.get(jobid);
+            for (String techid: sortedTechCompetency.keySet()){
+                if(sortedTechCompetency.get(techid).contains(servtype)){
+                    teamMatrix.put(techid,jobid);
+                    assignedTechList.add(techid);
+                    if(jobid.compareTo("J015") > 0){
+                        if(assignedTechList.size() == 2){
+                            team = true;
+                            break;
+                        }
+                        else
+                            continue;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+            if(team == true){
+                sortedTechCompetency.remove(assignedTechList.get(0));
+                sortedTechCompetency.remove(assignedTechList.get(1));
+                assignedTechList.remove(0);
+                assignedTechList.remove(1);
+                team = false;
+            }
+            else {
+                sortedTechCompetency.remove(assignedTechList.get(0));
+                assignedTechList.remove(0);
+            }
+
+        }
     }
 
 }
